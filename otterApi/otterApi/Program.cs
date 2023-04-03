@@ -43,6 +43,17 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCookiePolicy(new CookiePolicyOptions
+    {
+        Secure = CookieSecurePolicy.None
+    });
+}
+else
+{
+    app.UseCookiePolicy(new CookiePolicyOptions
+    {
+        Secure = CookieSecurePolicy.Always
+    });
 }
 app.UseCors("AllowAllOrigins");
 app.UseHttpsRedirection();

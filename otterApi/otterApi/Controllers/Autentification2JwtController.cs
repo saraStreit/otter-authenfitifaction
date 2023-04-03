@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Umbraco.Core.Persistence.Repositories;
 
 namespace otterApi.Controllers
 {
@@ -16,38 +18,38 @@ namespace otterApi.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private string token;
+        private readonly SymmetricSecurityKey _key;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController()
         {
-            _configuration = configuration;
-            var generator = new jwt_token();
-            token = generator.GenerateJwtKey();
+            var key = new byte[64];
+            using (var rng = new RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(key);
+            }
+            _key = new SymmetricSecurityKey(key);
         }
 
         [AllowAnonymous]
-        [HttpPost("login")]
+        [HttpPost("loginJwt")]
         public IActionResult Login([FromBody] LoginModel model)
         {
-
-            if (model.Username != "test" || model.Password != "password")
+            if (model.Username != "admin" || model.Password != "1234")
             {
                 return Unauthorized();
             }
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration[this.token]);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Issuer = _configuration["Jwt:Issuer"],
-                Audience = _configuration["Jwt:Audience"],
+                Issuer = "otterApi",
+                Audience = "otterClient",
                 Expires = DateTime.UtcNow.AddHours(1),
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.Name, model.Username)
                 }),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
@@ -63,8 +65,6 @@ namespace otterApi.Controllers
 
             return Ok(new { Message = $"Hello, {username}! This is a protected API endpoint." });
         }
-
-        
     }
 
     public class LoginModel
@@ -73,4 +73,3 @@ namespace otterApi.Controllers
         public string Password { get; set; }
     }
 }
-
