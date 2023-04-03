@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,8 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-builder.Services.AddAuthorization()
-builder.Services.AddAuthentication().AddCookie();
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -27,9 +28,19 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapGet("/", () => "Hello World!");
+app.MapGet("/protected", () => "secret").RequireAuthorization();
 app.MapGet("/login", (HttpContext context) =>
 {
-    context.SignInAsync(new ClaimsPrincipal())
-})
+    context.SignInAsync(new ClaimsPrincipal(new[]
+    {
+        new ClaimsIdentity(new List<Claim>()
+        {
+            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
+        }, CookieAuthenticationDefaults.AuthenticationScheme
+        )
+    }));
+
+    return "ok";
+});
 
 app.Run();
