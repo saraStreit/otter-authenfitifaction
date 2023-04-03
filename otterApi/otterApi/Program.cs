@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Net.Http.Headers;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +13,27 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddCors(options =>
+  options.AddPolicy("Dev", builder =>
+  {
+      // Allow multiple methods
+      builder.WithMethods("GET", "POST", "PATCH", "DELETE", "OPTIONS")
+        .WithHeaders(
+          HeaderNames.Accept,
+          HeaderNames.ContentType,
+          HeaderNames.Authorization)
+        .AllowCredentials()
+        .SetIsOriginAllowed(origin =>
+        {
+            if (string.IsNullOrWhiteSpace(origin)) return false;
+            // Only add this to allow testing with localhost, remove this line in production!
+            if (origin.ToLower().StartsWith("http://localhost")) return true;
+            // Insert your production domain here.
+            if (origin.ToLower().StartsWith("https://dev.mydomain.com")) return true;
+            return false;
+        });
+  })
+);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -27,20 +48,6 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapGet("/", () => "Hello World!");
-app.MapGet("/protected", () => "secret").RequireAuthorization();
-app.MapGet("/login", (HttpContext context) =>
-{
-    context.SignInAsync(new ClaimsPrincipal(new[]
-    {
-        new ClaimsIdentity(new List<Claim>()
-        {
-            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
-        }, CookieAuthenticationDefaults.AuthenticationScheme
-        )
-    }));
 
-    return "ok";
-});
 
 app.Run();
