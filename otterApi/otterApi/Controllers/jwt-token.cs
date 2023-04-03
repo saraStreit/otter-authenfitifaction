@@ -3,9 +3,9 @@ using System.Text.Json;
 
 namespace otterApi.Controllers
 {
-    public class jwt_token
+    public class JwtToken
     {
-        public string GenerateJwtKey()
+        public byte[] GenerateJwtKey()
         {
             var key = new byte[32];
             using (var generator = RandomNumberGenerator.Create())
@@ -13,20 +13,7 @@ namespace otterApi.Controllers
                 generator.GetBytes(key);
             }
 
-            var base64Key = Convert.ToBase64String(key);
-
-            var appSettings = new
-            {
-                Jwt = new
-                {
-                    Key = base64Key
-                }
-            };
-            var json = JsonSerializer.Serialize(appSettings, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-            return json;
+            return key;
         }
     }
 }
