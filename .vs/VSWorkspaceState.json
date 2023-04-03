@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\otterApi",
+    "\\otterApi\\Controllers"
   ],
-  "SelectedNode": "\\otterApi",
+  "SelectedNode": "\\otterApi\\Controllers\\Autentification2JwtController.cs",
   "PreviewInSolutionExplorer": false
 }
