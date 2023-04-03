@@ -3,6 +3,12 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Xml.Linq;
+using System.Text;
+using Microsoft.ApplicationInsights.Extensibility.Implementation;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using System;
+using System.Linq;
 
 namespace otterApi.Controllers
 {
@@ -17,11 +23,27 @@ namespace otterApi.Controllers
             _logger = logger;
         }
 
-        [HttpGet(Name = "GetLogin")]
-        public string Get()
+        [HttpGet]
+        [Route("login")]
+        [Produces("application/json")]
+        public IActionResult TryLogin([FromHeader(Name = "Authorisation")] string header)
         {
-            return "hello world";
-        }
+            string emailPwSecret = header.Substring("Basic ".Length).Trim();
+            string emailPw = Encoding.GetEncoding("iso-8859-1").GetString(Convert.FromBase64String(emailPwSecret));
+            int separator = emailPw.IndexOf(":");
+            string email = emailPw.Substring(0, separator);
+            string pw = emailPw.Substring(separator + 1);
+
+            var context = new UserContext();
+            var users = context.Users.Where(x => x.Email == email).ToList();
+            if ((users.Count > 0) && (BCryptPasswordHasher.VerifyHashedPassword(users.FirstOrDefault().Password, password)))
+            {
+                var claims = new Claim[]
+                {
+            new Claim("ID", users.FirstOrDefault().UserID.ToString()),
+            new Claim("Name", users.FirstOrDefault().Name.ToString())
+                };
+            }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(string username, string password)
