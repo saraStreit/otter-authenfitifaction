@@ -1,14 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using System.Xml.Linq;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Text;
-using Microsoft.ApplicationInsights.Extensibility.Implementation;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Linq;
 
 namespace otterApi.Controllers
 {
